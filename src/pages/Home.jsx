@@ -4,7 +4,7 @@ function Home() {
   return (
     <div className="page">
       <h1>Hello World</h1>
-      <p>Welcome to the home page! 2</p>
+      <p>Welcome to the home page! 3</p>
       <Link to="/about">
         <button className="nav-button">Go to About Page</button>
       </Link>
