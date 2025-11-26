@@ -4,6 +4,6 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/test-pages/',
+  base: process.env.VITE_BASE || '/test-pages/',
 })
 
