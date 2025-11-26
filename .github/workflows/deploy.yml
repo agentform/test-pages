@@ -4,18 +4,18 @@ on:
   push:
     branches:
       - main
-    tags:
-      - '*'
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: "pages-${{ github.ref }}"
+  group: "pages"
   cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,30 +34,25 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Determine deployment path
-        id: deployment-path
-        run: |
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            TAG_NAME=${GITHUB_REF#refs/tags/}
-            echo "destination_dir=tags/$TAG_NAME" >> $GITHUB_OUTPUT
-            echo "vite_base=/test-pages/tags/$TAG_NAME/" >> $GITHUB_OUTPUT
-            echo "is_tag=true" >> $GITHUB_OUTPUT
-          else
-            echo "destination_dir=." >> $GITHUB_OUTPUT
-            echo "vite_base=/test-pages/" >> $GITHUB_OUTPUT
-            echo "is_tag=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Build
         run: yarn build
-        env:
-          VITE_BASE: ${{ steps.deployment-path.outputs.vite_base }}
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          destination_dir: ${{ steps.deployment-path.outputs.destination_dir }}
-          keep_files: ${{ steps.deployment-path.outputs.is_tag }}
+          path: ./dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
